@@ -1,2 +1,2 @@
-product  = "slack-help-bot"
+product  = "ccd-slack-help-bot"
 location = "uksouth"

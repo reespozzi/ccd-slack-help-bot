@@ -45,7 +45,7 @@ const server = http.createServer((req, res) => {
     if (req.method !== 'GET') {
         res.end(`{"error": "${http.STATUS_CODES[405]}"}`)
     } else if (req.url === '/health') {
-        res.end(`<h1>slack-help-bot</h1>`)
+        res.end(`<h1>ccd-slack-help-bot</h1>`)
     } else if (req.url === '/health/liveness') {
         if (app.receiver.client.badConnection) {
             res.statusCode = 500
@@ -55,7 +55,7 @@ const server = http.createServer((req, res) => {
 
         res.end('OK');
     } else if (req.url === '/health/readiness') {
-        res.end(`<h1>slack-help-bot</h1>`)
+        res.end(`<h1>ccd-slack-help-bot</h1>`)
     } else {
         res.end(`{"error": "${http.STATUS_CODES[404]}"}`)
     }

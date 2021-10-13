@@ -7,14 +7,14 @@ trigger:
   batch: true
   branches:
     include:
-    - main
+    - master
 
 variables:
   terraformVersion: 0.14.5
   timeoutInMinutes: 60
   agentPool: 'ubuntu-18.04'
   build: $(Build.BuildNumber)
-  isMaster: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+  isMaster: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
   connectedServiceName: DCD-CFT-Sandbox
   keyVaultName: infra-vault-sandbox
   secretsFilter: azure-devops-token
@@ -25,7 +25,7 @@ parameters:
     displayName: Environment to run
     type: object
     default:
-      - deployment: 'slack-help-bot'
+      - deployment: 'ccd-slack-help-bot'
         environment: 'cftptl'
         storageAccountName: 'cftptlintsvc'
         storageAccountRg: 'core-infra-intsvc-rg'

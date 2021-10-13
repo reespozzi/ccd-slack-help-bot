@@ -1,5 +1,5 @@
 {
-  "name": "slack-help-bot",
+  "name": "ccd-slack-help-bot",
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
