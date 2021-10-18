@@ -4,4 +4,4 @@ services:
   ccd-slack-help-bot:
     build: .
     env_file:
-      - ./.env
+      - .env

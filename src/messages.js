@@ -6,22 +6,7 @@ function convertJiraKeyToUrl(jiraId) {
 
 const config = require('config')
 
-const slackChannelId = config.get('slack.report_channel_id')
-const slackMessageIdRegex = new RegExp(`${slackChannelId}\/(.*)\\|`)
-
 const slackLinkRegex = /view in Slack\|(https:\/\/.+slack\.com.+)]/
-
-function extractSlackMessageIdFromText(text) {
-    if (text === undefined) {
-        return undefined
-    }
-
-    const regexResult = slackMessageIdRegex.exec(text);
-    if (regexResult === null) {
-        return undefined
-    }
-    return regexResult[1]
-}
 
 function extractSlackLinkFromText(text) {
     if (text === undefined) {
@@ -38,8 +23,9 @@ function extractSlackLinkFromText(text) {
 function helpRequestRaised({
                                user,
                                summary,
+                               priority,
                                environment,
-                               prBuildUrl,
+                               references,
                                jiraId
                            }) {
     return [
@@ -62,6 +48,10 @@ function helpRequestRaised({
                 },
                 {
                     "type": "mrkdwn",
+                    "text": `*Priority* :rotating_light: \n ${priority}`
+                },
+                {
+                    "type": "mrkdwn",
                     "text": `*Reporter* :man-surfing: \n <@${user}>`
                 },
                 {
@@ -75,7 +65,7 @@ function helpRequestRaised({
             "fields": [
                 {
                     "type": "mrkdwn",
-                    "text": `*PR / build URLs* :link: \n${prBuildUrl}`
+                    "text": `*Jira/ServiceNow references* :pencil: \n${references}`
                 }
             ]
         },
@@ -137,7 +127,7 @@ function helpRequestRaised({
 function helpRequestDetails(
     {
         description,
-        analysis,
+        analysis
     }) {
     return [
         {
@@ -276,13 +266,32 @@ function openHelpRequestBlocks() {
     return {
         "title": {
             "type": "plain_text",
-            "text": "Platform help request"
+            "text": "Support request"
         },
         "submit": {
             "type": "plain_text",
             "text": "Submit"
         },
         "blocks": [
+            {
+                "type": "input",
+                "block_id": "request_type",
+                "element": {
+                    "type": "radio_buttons",
+                    "options": [
+                        option('CCD Support', 'ccd'),
+                        option('CFTS Level 2 Support', 'cfts'),
+                    ],
+                    "action_id": "request_type"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Request type"
+                }
+            },
+            {
+                "type": "divider"
+            },
             {
                 "type": "input",
                 "block_id": "summary",
@@ -301,19 +310,43 @@ function openHelpRequestBlocks() {
             },
             {
                 "type": "input",
-                "block_id": "urls",
+                "block_id": "priority",
+                "element": {
+                    "type": "static_select",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "Standard priority classification",
+                        "emoji": true
+                    },
+                    "options": [
+                        option('Highest'),
+                        option('High'),
+                        option('Medium'),
+                        option('Low'),
+                    ],
+                    "action_id": "priority"
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Priority",
+                    "emoji": true
+                }
+            },
+            {
+                "type": "input",
+                "block_id": "references",
                 "optional": true,
                 "element": {
                     "type": "plain_text_input",
                     "action_id": "title",
                     "placeholder": {
                         "type": "plain_text",
-                        "text": "Link to any build or pull request"
+                        "text": "Any relevant ticket references"
                     }
                 },
                 "label": {
                     "type": "plain_text",
-                    "text": "PR / build URLs"
+                    "text": "Jira/ServiceNow references"
                 }
             },
             {
@@ -333,45 +366,13 @@ function openHelpRequestBlocks() {
                         option('Production'),
                         option('Perftest / Test', 'test'),
                         option('ITHC'),
-                        option('N/A', 'none')
+                        option('N/A', 'none'),
                     ],
                     "action_id": "environment"
                 },
                 "label": {
                     "type": "plain_text",
                     "text": "Environment",
-                    "emoji": true
-                }
-            },
-            {
-                "type": "input",
-                "block_id": "area",
-                "element": {
-                    "type": "static_select",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Select an item",
-                        "emoji": true
-                    },
-                    "options": [
-                        option("AKS"),
-                        option("Azure"),
-                        option("Azure DevOps", "azure-devops"),
-                        option("Database read", "DBQuery"),
-                        option("Database update", "DBUpdate"),
-                        option("Elasticsearch"),
-                        option("GitHub"),
-                        option("Jenkins"),
-                        option("Other"),
-                        option("Question"),
-                        option("SSL"),
-                        option("VPN"),
-                    ],
-                    "action_id": "area"
-                },
-                "label": {
-                    "type": "plain_text",
-                    "text": "Which area do you need help in?",
                     "emoji": true
                 }
             },
@@ -449,34 +450,11 @@ function openHelpRequestBlocks() {
                     "text": "Which team are you from?",
                     "emoji": true
                 }
-            },
-            {
-                "type": "input",
-                "block_id": "checked_with_team",
-                "element": {
-                    "type": "static_select",
-                    "placeholder": {
-                        "type": "plain_text",
-                        "text": "Select an item",
-                        "emoji": true
-                    },
-                    "options": [
-                        option('No'),
-                        option('Yes')
-                    ],
-                    "action_id": "checked_with_team"
-                },
-                "label": {
-                    "type": "plain_text",
-                    "text": "Have you checked with your team?",
-                    "emoji": true
-                }
-            },
+            }
         ],
         "type": "modal",
-        callback_id: 'create_help_request'
+        "callback_id": "create_help_request"
     }
-
 }
 
 module.exports.appHomeUnassignedIssues = appHomeUnassignedIssues;
@@ -485,4 +463,3 @@ module.exports.helpRequestRaised = helpRequestRaised;
 module.exports.helpRequestDetails = helpRequestDetails;
 module.exports.openHelpRequestBlocks = openHelpRequestBlocks;
 module.exports.extractSlackLinkFromText = extractSlackLinkFromText;
-module.exports.extractSlackMessageIdFromText = extractSlackMessageIdFromText;

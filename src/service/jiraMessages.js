@@ -7,17 +7,16 @@ function optionalField(prefix, value) {
 
 function mapFieldsToDescription(
     {
-        prBuildUrl,
+        references,
         environment,
         description,
         analysis,
-        checkedWithTeam,
         slackLink
     }) {
     return `
 h6. _This is an automatically generated ticket created from Slack, do not reply or update in here, [view in Slack|${slackLink}]_
 
-${optionalField('PR / build URLs', prBuildUrl)}
+${optionalField('Jira/ServiceNow references', references)}
 
 
 ${optionalField('Environment', environment)}
@@ -27,8 +26,6 @@ ${optionalField('Environment', environment)}
 ${description}
 
 *Analysis done so far*: ${analysis}
-
-*Have you checked with your team?*: ${checkedWithTeam}
 `
 }
 

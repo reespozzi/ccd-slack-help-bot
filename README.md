@@ -83,7 +83,11 @@ $ npm install
 Run:
 
 ```bash
-$ node app.js
+$ npm start
+```
+or to automatically restart the server upon any changes:
+```bash
+$ npm run watch
 ```
 
 #### Running locally with Docker

@@ -1,24 +1,24 @@
 const config = require('@hmcts/properties-volume').addTo(require('config'))
-const setupSecrets = require('./src/setupSecrets');
-// must be called before any config.get calls
-setupSecrets.setup();
 
+const { 
+    getReportChannel, 
+    isReportChannel
+} = require('./src/supportConfig');
 const {
     appHomeUnassignedIssues,
     extractSlackLinkFromText,
-    extractSlackMessageIdFromText,
     helpRequestDetails,
     helpRequestRaised,
     openHelpRequestBlocks,
     unassignedOpenIssue,
-} = require("./src/messages");
+} = require('./src/messages');
 const {App, LogLevel, SocketModeReceiver} = require('@slack/bolt');
 const crypto = require('crypto')
 const {
     addCommentToHelpRequest,
     assignHelpRequest,
     createHelpRequest,
-    extraJiraId,
+    extractJiraId,
     extractJiraIdFromBlocks,
     resolveHelpRequest,
     searchForUnassignedOpenIssues,
@@ -32,10 +32,6 @@ const app = new App({
     appToken: config.get('slack.app_token'),
     socketMode: true,
 });
-
-const reportChannel = config.get('slack.report_channel');
-// can't find an easy way to look this up via API unfortunately :(
-const reportChannelId = config.get('slack.report_channel_id');
 
 const http = require('http');
 
@@ -123,9 +119,9 @@ app.shortcut('launch_shortcut', async ({shortcut, body, ack, context, client}) =
 });
 
 function extractLabels(values) {
+    const priority = `priority-${values.priority.priority.selected_option.value}`
     const team = `team-${values.team.team.selected_option.value}`
-    const area = `area-${values.area.area.selected_option.value}`
-    return [area, team];
+    return [priority, team];
 }
 
 app.view('create_help_request', async ({ack, body, view, client}) => {
@@ -143,22 +139,26 @@ app.view('create_help_request', async ({ack, body, view, client}) => {
         const helpRequest = {
             user,
             summary: view.state.values.summary.title.value,
+            priority: view.state.values.priority.priority.selected_option.text.text,
+            references: view.state.values.references?.title?.value || "None",
             environment: view.state.values.environment.environment.selected_option?.text.text || "None",
-            prBuildUrl: view.state.values.urls?.title?.value || "None",
             description: view.state.values.description.description.value,
-            checkedWithTeam: view.state.values.checked_with_team.checked_with_team.selected_option.value,
             analysis: view.state.values.analysis.analysis.value,
         }
 
+        const requestType = view.state.values.request_type.request_type.selected_option.value
+
         const jiraId = await createHelpRequest({
+            requestType,
             summary: helpRequest.summary,
             userEmail,
             labels: extractLabels(view.state.values)
         })
 
+        const reportChannel = getReportChannel(requestType)
         const result = await client.chat.postMessage({
             channel: reportChannel,
-            text: 'New platform help request raised',
+            text: 'New support request raised',
             blocks: helpRequestRaised({
                 ...helpRequest,
                 jiraId
@@ -168,7 +168,7 @@ app.view('create_help_request', async ({ack, body, view, client}) => {
         await client.chat.postMessage({
             channel: reportChannel,
             thread_ts: result.message.ts,
-            text: 'New platform help request raised',
+            text: 'New support request raised',
             blocks: helpRequestDetails(helpRequest)
         });
 
@@ -234,7 +234,7 @@ app.action('assign_help_request_to_me', async ({
         await client.chat.update({
             channel: body.channel.id,
             ts: body.message.ts,
-            text: 'New platform help request raised',
+            text: 'New support request raised',
             blocks: blocks
         });
     } catch (error) {
@@ -271,7 +271,7 @@ app.action('resolve_help_request', async ({
         await client.chat.update({
             channel: body.channel.id,
             ts: body.message.ts,
-            text: 'New platform help request raised',
+            text: 'New support request raised',
             blocks: blocks
         });
     } catch (error) {
@@ -308,7 +308,7 @@ app.action('start_help_request', async ({
         await client.chat.update({
             channel: body.channel.id,
             ts: body.message.ts,
-            text: 'New platform help request raised',
+            text: 'New support request raised',
             blocks: blocks
         });
     } catch (error) {
@@ -327,7 +327,7 @@ app.action('app_home_unassigned_user_select', async ({
             user
         })).profile.email
 
-        const jiraId = extraJiraId(action.block_id)
+        const jiraId = extractJiraId(action.block_id)
         await assignHelpRequest(jiraId, userEmail)
 
         await reopenAppHome(client, user);
@@ -335,17 +335,6 @@ app.action('app_home_unassigned_user_select', async ({
         console.error(error);
     }
 })
-
-function extractSlackMessageId(body, action) {
-    let result
-    for (let i = 0; i < body.view.blocks.length; i++) {
-        if (body.view.blocks[i].block_id === action.block_id) {
-            const slackLink = body.view.blocks[i - 1].text.text
-            return extractSlackMessageIdFromText(slackLink)
-        }
-    }
-    return result
-}
 
 app.action('app_home_take_unassigned_issue', async ({
                                                          body, action, ack, client, context
@@ -358,8 +347,7 @@ app.action('app_home_take_unassigned_issue', async ({
             user
         })).profile.email
 
-        const jiraId = extraJiraId(action.block_id)
-        const slackMessageId = extractSlackMessageId(body, action);
+        const jiraId = extractJiraId(action.block_id)
 
         await assignHelpRequest(jiraId, userEmail)
 
@@ -420,7 +408,7 @@ app.event('message', async ({event, context, client, say}) => {
     try {
         // filter unwanted channels in case someone invites the bot to it
         // and only look at threaded messages
-        if (event.channel === reportChannelId && event.thread_ts) {
+        if (isReportChannel(event.channel) && event.thread_ts) {
             const slackLink = (await client.chat.getPermalink({
                 channel: event.channel,
                 'message_ts': event.thread_ts
@@ -433,12 +421,12 @@ app.event('message', async ({event, context, client, say}) => {
             const displayName = user.profile.display_name
 
             const helpRequestMessages = (await client.conversations.replies({
-                channel: reportChannelId,
+                channel: event.channel,
                 ts: event.thread_ts,
                 limit: 200, // after a thread is 200 long we'll break but good enough for now
             })).messages
 
-            if (helpRequestMessages.length > 0 && helpRequestMessages[0].text === 'New platform help request raised') {
+            if (helpRequestMessages.length > 0 && helpRequestMessages[0].text === 'New support request raised') {
                 const jiraId = extractJiraIdFromBlocks(helpRequestMessages[0].blocks)
 
                 const groupRegex = /<!subteam\^.+\|([^>.]+)>/g

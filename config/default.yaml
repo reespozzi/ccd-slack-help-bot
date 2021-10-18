@@ -2,14 +2,25 @@
 slack:
   #bot_token: no default
   #app_token: no default
-  report_channel: bot-test
-  report_channel_id: C01KHKNJUKE
+  ccd:
+    report_channel: bot-test
+    report_channel_id: C01KHKNJUKE
+  cfts:
+    report_channel: bot-test
+    report_channel_id: C01KHKNJUKE
 
 jira:
-  start_transition_id: 21
-  done_transition_id: 41
-  project: SBOX
-  issue_type_name: Bug
-  issue_type_id: 10900
   #username: no default
   #api_token: no default
+  ccd:
+    start_transition_id: 21
+    done_transition_id: 41
+    project: SBOX
+    issue_type_id: Bug
+    issue_type_name: 10900
+  cfts:
+    start_transition_id: 21
+    done_transition_id: 41
+    project: SBOX
+    issue_type_id: Bug
+    issue_type_name: 1090
