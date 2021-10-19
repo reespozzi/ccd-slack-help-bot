@@ -27,9 +27,9 @@ const {
 } = require("./src/service/persistence");
 
 const app = new App({
-    token: config.get('secrets.cftptl-intsvc.slack-bot-token'), //disable this if enabling OAuth in socketModeReceiver
+    token: config.get('secrets.cftptl-intsvc.ccd-slack-bot-token'), //disable this if enabling OAuth in socketModeReceiver
     // logLevel: LogLevel.DEBUG,
-    appToken: config.get('secrets.cftptl-intsvc.slack-app-token'),
+    appToken: config.get('secrets.cftptl-intsvc.ccd-slack-app-token'),
     socketMode: true,
 });
 
