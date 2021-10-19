@@ -4,8 +4,6 @@ function convertJiraKeyToUrl(jiraId) {
     return `https://tools.hmcts.net/jira/browse/${jiraId}`;
 }
 
-const config = require('config')
-
 const slackLinkRegex = /view in Slack\|(https:\/\/.+slack\.com.+)]/
 
 function extractSlackLinkFromText(text) {

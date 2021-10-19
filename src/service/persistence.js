@@ -2,7 +2,7 @@ const JiraApi = require('jira-client');
 const config = require('config')
 const {createComment, mapFieldsToDescription} = require("./jiraMessages");
 
-const systemUser = config.get('jira.username')
+const systemUser = config.get('secrets.cftptl-intsvc.jira-username')
 
 const { 
     extractProjectRegex,
@@ -18,7 +18,7 @@ const {
 const jira = new JiraApi({
     protocol: 'https',
     host: 'tools.hmcts.net/jira',
-    bearer: config.get('jira.api_token'),
+    bearer: config.get('secrets.cftptl-intsvc.jira-api-token'),
     apiVersion: '2',
     strictSSL: true
 });
