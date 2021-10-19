@@ -8,7 +8,7 @@ locals {
     cftptl-intsvc  = "Mgmt"
   }
   common_tags = {
-    "managedBy"          = "PlatOps"
+    "managedBy"          = "CCD"
     "solutionOwner"      = "CFT"
     "activityName"       = var.activity_name
     "dataClassification" = "Internal"
