@@ -208,10 +208,6 @@ app.event('app_mention', async ({event, context, client, say}) => {
     }
 });
 
-function randomString() {
-    return crypto.randomBytes(16).toString("hex");
-}
-
 app.action('assign_help_request_to_me', async ({
                                                    body, action, ack, client, context
                                                }) => {
