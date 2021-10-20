@@ -156,6 +156,7 @@ app.view('create_help_request', async ({ack, body, view, client}) => {
         })
 
         const reportChannel = getReportChannel(requestType)
+        console.log(`Publishing request ${jiraId} to channel ${reportChannel}`)
         const result = await client.chat.postMessage({
             channel: reportChannel,
             text: 'New support request raised',
