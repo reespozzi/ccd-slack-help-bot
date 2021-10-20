@@ -52,7 +52,7 @@ async function startHelpRequest(jiraId) {
 async function searchForUnassignedOpenIssues() {
     const projects = getJiraProjects().join(', ')
     const issueTypes = getIssueTypeNames().map(name => `"${name}"`).join(', ')
-    const jqlQuery = `project in (${projects}) AND type in (${issueTypes}) AND status = "To Do" and assignee is EMPTY ORDER BY created ASC`;
+    const jqlQuery = `project in (${projects}) AND type in (${issueTypes}) AND status in ("Draft", "To Do") and assignee is EMPTY ORDER BY created ASC`;
     try {
         return await jira.searchJira(
             jqlQuery,
