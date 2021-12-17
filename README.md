@@ -22,7 +22,7 @@ Listens for new posts in a designated Slack channel and raises a coresponding re
 
 4. Expand the **Subscribe to bot events** tab, add the following settings and save changes.
 
-<img src="images/step4.png" width=50% height=50% />
+<img src="images/step4.png" width=50% height=50% /> 
 
 5. Expand the **Subscribe to events on behalf of users** tab, add the following settings and save changes.
 
